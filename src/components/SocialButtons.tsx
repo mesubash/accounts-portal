@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
+import { DEMO, DEMO_OAUTH_RETURN } from "@/lib/demoFlag";
 import { saveHandoff } from "@/lib/handoffStore";
 import { useHandoff } from "@/lib/useAuthSearch";
 
@@ -56,6 +57,7 @@ export function SocialButtons() {
 
   const start = (provider: string) => {
     saveHandoff(handoff);
+    if (DEMO) return window.location.assign(DEMO_OAUTH_RETURN);
     const query = new URLSearchParams({ redirectUri: `${window.location.origin}/oauth/callback` });
     if (handoff.audience) query.set("audience", handoff.audience);
     window.location.assign(`/api/auth/oauth/login/${encodeURIComponent(provider)}?${query}`);

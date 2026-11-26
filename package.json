@@ -11,8 +11,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "start": "node .output/server/index.mjs",
-    "mock": "node dev/mock-iam.mjs"
+    "start": "node .output/server/index.mjs"
   },
   "dependencies": {
     "@fontsource-variable/instrument-sans": "^5.3.0",

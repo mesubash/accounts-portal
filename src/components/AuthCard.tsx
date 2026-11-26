@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { APP_NAME } from "@/lib/brand";
 
+import { DemoNotice } from "./DemoNotice";
 import { ThemeToggle } from "./ThemeToggle";
 
 /**
@@ -54,6 +55,8 @@ export function AuthCard({
           {footer ? (
             <div className="mt-6 text-center text-sm text-muted-foreground">{footer}</div>
           ) : null}
+
+          <DemoNotice />
         </div>
       </main>
     </div>

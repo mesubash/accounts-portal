@@ -22,17 +22,21 @@ Your apps send people here to sign in; spring-iam sends them back with a one-tim
 
 ## Try it without spring-iam
 
+Demo mode answers every request in the browser, so all pages work with no backend:
+
 ```sh
 bun install
-bun run mock                                  # fake IAM on :8080
-bun run dev                                   # http://localhost:3000
+VITE_DEMO=true bun run dev                    # http://localhost:3000
 ```
 
-The mock accepts any password except `wrong`:
+A notice above the form lists what to type. Any password works except `wrong`:
 
 - `you@example.com` signs straight in
 - `mfa@example.com` asks for a code: `123456`, or recovery code `a1b2c3d4-e5f60718`
 - `enroll@example.com` goes through two-step setup (code `123456`)
+- `/verify-email?token=demo` and `/reset-password?token=demo` stand in for the email links (`token=bad` shows the failure)
+
+Build with `VITE_DEMO=true` to host a public demo. Never set it in front of a real IAM.
 
 ## Run it with spring-iam
 
@@ -56,6 +60,7 @@ Copy `.env.example` to `.env`. All values are read at build time.
 | ---------------------- | ----------------------- | ------------------------------------------------------------- |
 | `VITE_APP_NAME`        | `Accounts`              | Name in the header, page titles and recovery-code file        |
 | `IAM_URL`              | `http://localhost:8080` | Where `/api/**` is proxied                                    |
+| `VITE_DEMO`            | (off)                   | `true` answers the API in the browser; for demos only         |
 | `VITE_TRUSTED_ORIGINS` | (empty)                 | Extra origins `?continue=` may send users to, comma-separated |
 
 To change the colour, edit `--brand` in `src/styles.css` (one value each for light and dark).

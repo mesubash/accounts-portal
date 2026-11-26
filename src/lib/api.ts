@@ -4,6 +4,8 @@
  * Every call is same-origin under /api: in development Vite proxies it to the
  * IAM (see vite.config.ts); in production put both behind one reverse proxy so
  * the IAM's refresh cookie is first-party.
+ *
+ * With VITE_DEMO=true, requests are answered in the browser by ./demo instead.
  */
 
 export class ApiError extends Error {
@@ -35,15 +37,19 @@ async function request<T>(
   const url = options.query ? `${path}?${new URLSearchParams(options.query)}` : path;
   let res: Response;
   try {
-    res = await fetch(url, {
-      method,
-      credentials: "include",
-      headers: {
-        Accept: "application/json",
-        ...(options.body === undefined ? {} : { "Content-Type": "application/json" }),
-      },
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
-    });
+    // Inline env check (not the DEMO const) so normal builds drop ./demo entirely.
+    res =
+      import.meta.env.VITE_DEMO === "true"
+        ? await (await import("./demo")).demoFetch(method, path, options.query, options.body)
+        : await fetch(url, {
+            method,
+            credentials: "include",
+            headers: {
+              Accept: "application/json",
+              ...(options.body === undefined ? {} : { "Content-Type": "application/json" }),
+            },
+            body: options.body === undefined ? undefined : JSON.stringify(options.body),
+          });
   } catch {
     throw new ApiError(0, OFFLINE);
   }
