@@ -1,29 +1,96 @@
-# Welcome to your Lovable project
+# accounts-portal
 
-This project was built with [Lovable](https://lovable.dev).
+The sign-in pages for [spring-iam](https://github.com/mesubash/spring-iam): sign in, sign up,
+password reset, email verification and two-step verification, ready to put in front of your apps.
 
-## Build with Lovable
+Your apps send people here to sign in; spring-iam sends them back with a one-time code.
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+## What it covers
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+| Page               | What happens                                                                                 |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| `/signin`          | Email and password, plus any social providers spring-iam has turned on                       |
+| `/signup`          | Create an account; spring-iam emails a verification link                                     |
+| `/verify-email`    | Opened from that email (`?token=`)                                                           |
+| `/forgot-password` | Request a reset link                                                                         |
+| `/reset-password`  | Opened from the reset email (`?token=`)                                                      |
+| `/mfa`             | Six-digit code from an authenticator app, or a recovery code                                 |
+| `/mfa/enroll`      | First-time two-step setup when an account requires it: QR code, then one-time recovery codes |
+| `/oauth/callback`  | Where spring-iam returns after Google sign-in                                                |
+
+`/login` redirects to `/signin`, which is spring-iam's default `iam.sso.login-url`.
+
+## Try it without spring-iam
+
+```sh
+bun install
+bun run mock                                  # fake IAM on :8080
+bun run dev                                   # http://localhost:3000
+```
+
+The mock accepts any password except `wrong`:
+
+- `you@example.com` signs straight in
+- `mfa@example.com` asks for a code: `123456`, or recovery code `a1b2c3d4-e5f60718`
+- `enroll@example.com` goes through two-step setup (code `123456`)
+
+## Run it with spring-iam
+
+```sh
+IAM_URL=http://localhost:8080 bun run dev
+```
+
+The app server proxies `/api/**` to `IAM_URL`, so spring-iam's refresh cookie is set on this
+origin. On the spring-iam side, point its frontend here and allow the OAuth callback:
+
+```sh
+APP_FRONTEND_URL=https://accounts.example.com            # SSO sends signed-out users to /login
+APP_ALLOWED_REDIRECT_URIS=https://accounts.example.com/oauth/callback
+```
+
+## Configuration
+
+Copy `.env.example` to `.env`. All values are read at build time.
+
+| Variable               | Default                 | Purpose                                                       |
+| ---------------------- | ----------------------- | ------------------------------------------------------------- |
+| `VITE_APP_NAME`        | `Accounts`              | Name in the header, page titles and recovery-code file        |
+| `IAM_URL`              | `http://localhost:8080` | Where `/api/**` is proxied                                    |
+| `VITE_TRUSTED_ORIGINS` | (empty)                 | Extra origins `?continue=` may send users to, comma-separated |
+
+To change the colour, edit `--brand` in `src/styles.css` (one value each for light and dark).
+
+## Deploy
+
+```sh
+IAM_URL=https://iam.internal:8080 bun run build
+bun run start                                 # node .output/server/index.mjs, port 3000
+```
+
+It is a plain Node server. Put it behind your usual TLS proxy.
+
+## Security notes
+
+- After sign-in the page only follows `?continue=` to its own origin or to `VITE_TRUSTED_ORIGINS`.
+  Anything else is ignored, so it can't be used as an open redirect.
+- MFA challenge and enrolment tokens live in browser history state, not the URL, so they stay out
+  of logs and `Referer` headers.
+- The QR code is drawn in the browser; the TOTP secret is never sent to a QR service.
+- Fonts are self-hosted, so no third party sees who opens the sign-in page.
+
+## Not included yet
+
+- spring-iam's optional SSO consent screen (`iam.sso.consent-url`)
+- Account settings (change password, turn MFA off, sessions): this portal covers signing in only
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+bun run lint && bun run typecheck && bun run test && bun run build
 ```
 
-## Built with
+Stack: TanStack Start, React 19, Tailwind CSS 4, react-hook-form with zod, Vitest.
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+## License
+
+MIT
