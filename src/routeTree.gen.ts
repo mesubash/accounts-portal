@@ -14,9 +14,11 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MfaIndexRouteImport } from './routes/mfa.index'
+import { Route as OauthCallbackRouteImport } from './routes/oauth.callback'
 import { Route as MfaEnrollRouteImport } from './routes/mfa.enroll'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -44,6 +46,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
@@ -59,6 +66,11 @@ const MfaIndexRoute = MfaIndexRouteImport.update({
   path: '/mfa/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OauthCallbackRoute = OauthCallbackRouteImport.update({
+  id: '/oauth/callback',
+  path: '/oauth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MfaEnrollRoute = MfaEnrollRouteImport.update({
   id: '/mfa/enroll',
   path: '/mfa/enroll',
@@ -68,35 +80,41 @@ const MfaEnrollRoute = MfaEnrollRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/verify-email': typeof VerifyEmailRoute
   '/mfa/enroll': typeof MfaEnrollRoute
+  '/oauth/callback': typeof OauthCallbackRoute
   '/mfa/': typeof MfaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/verify-email': typeof VerifyEmailRoute
   '/mfa/enroll': typeof MfaEnrollRoute
+  '/oauth/callback': typeof OauthCallbackRoute
   '/mfa': typeof MfaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/verify-email': typeof VerifyEmailRoute
   '/mfa/enroll': typeof MfaEnrollRoute
+  '/oauth/callback': typeof OauthCallbackRoute
   '/mfa/': typeof MfaIndexRoute
 }
 export interface FileRouteTypes {
@@ -104,46 +122,54 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/forgot-password'
+    | '/login'
     | '/reset-password'
     | '/signin'
     | '/signup'
     | '/sitemap.xml'
     | '/verify-email'
     | '/mfa/enroll'
+    | '/oauth/callback'
     | '/mfa/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/forgot-password'
+    | '/login'
     | '/reset-password'
     | '/signin'
     | '/signup'
     | '/sitemap.xml'
     | '/verify-email'
     | '/mfa/enroll'
+    | '/oauth/callback'
     | '/mfa'
   id:
     | '__root__'
     | '/'
     | '/forgot-password'
+    | '/login'
     | '/reset-password'
     | '/signin'
     | '/signup'
     | '/sitemap.xml'
     | '/verify-email'
     | '/mfa/enroll'
+    | '/oauth/callback'
     | '/mfa/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   MfaEnrollRoute: typeof MfaEnrollRoute
+  OauthCallbackRoute: typeof OauthCallbackRoute
   MfaIndexRoute: typeof MfaIndexRoute
 }
 
@@ -184,6 +210,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forgot-password': {
       id: '/forgot-password'
       path: '/forgot-password'
@@ -205,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MfaIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/oauth/callback': {
+      id: '/oauth/callback'
+      path: '/oauth/callback'
+      fullPath: '/oauth/callback'
+      preLoaderRoute: typeof OauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mfa/enroll': {
       id: '/mfa/enroll'
       path: '/mfa/enroll'
@@ -218,12 +258,14 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   MfaEnrollRoute: MfaEnrollRoute,
+  OauthCallbackRoute: OauthCallbackRoute,
   MfaIndexRoute: MfaIndexRoute,
 }
 export const routeTree = rootRouteImport

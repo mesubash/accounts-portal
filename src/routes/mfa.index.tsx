@@ -1,109 +1,121 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { pageTitle } from "@/lib/brand";
 
 import { AuthCard } from "@/components/AuthCard";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { FormField } from "@/components/FormField";
+import { SignedIn } from "@/components/SignedIn";
 import { SubmitButton } from "@/components/SubmitButton";
+import { TextLink } from "@/components/TextLink";
 import { api, errorMessage } from "@/lib/api";
-import { redirectBack } from "@/lib/oidc";
-import { useAuthSearch } from "@/lib/useAuthSearch";
-import { codeFormSchema, type CodeValues } from "@/lib/validation";
+import { pageTitle } from "@/lib/brand";
+import { useLoginOutcome } from "@/lib/useLoginOutcome";
+import { codeFormSchema, recoveryFormSchema, type CodeValues } from "@/lib/validation";
 
 export const Route = createFileRoute("/mfa/")({
   head: () => ({
-    meta: [
-      { title: pageTitle("Two-step verification") },
-      {
-        name: "description",
-        content: "Enter the 6-digit code from your authenticator app to finish signing in.",
-      },
-      { property: "og:title", content: pageTitle("Two-step verification") },
-      { property: "og:description", content: "Confirm it's you with a 6-digit code." },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: pageTitle("Two-step verification") }, { name: "robots", content: "noindex" }],
   }),
   component: Mfa,
 });
 
 function Mfa() {
-  const { searchStr } = useAuthSearch();
-  const challengeId = new URLSearchParams(searchStr).get("challengeId") ?? "";
+  const challenge = useRouterState({ select: (s) => s.location.state.challenge });
+  const { handle, signedIn } = useLoginOutcome();
   const [banner, setBanner] = useState<string | null>(null);
-  const [signedIn, setSignedIn] = useState(false);
+  const [useRecovery, setUseRecovery] = useState(false);
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<CodeValues>({
-    resolver: zodResolver(codeFormSchema),
+    resolver: zodResolver(useRecovery ? recoveryFormSchema : codeFormSchema),
     defaultValues: { code: "" },
   });
 
-  const onSubmit = async (values: CodeValues) => {
+  const onSubmit = async ({ code }: CodeValues) => {
+    if (!challenge) return;
     setBanner(null);
     try {
-      const result = await api.mfaVerify({ challengeId, code: values.code });
-      if (!redirectBack(result.redirectTo)) setSignedIn(true);
+      await handle(await api.mfaVerify({ challenge, code }));
     } catch (err) {
       setBanner(errorMessage(err));
     }
   };
 
-  const signInLink = (
-    <Link
-      to="/signin"
-      search={(prev: Record<string, unknown>) => prev}
-      className="font-medium text-primary underline-offset-4 hover:underline"
-    >
-      Back to sign in
-    </Link>
-  );
+  const back = <TextLink to="/signin">Back to sign in</TextLink>;
 
-  if (signedIn) {
+  if (signedIn) return <SignedIn />;
+
+  if (!challenge) {
     return (
-      <AuthCard title="You're signed in" footer={signInLink}>
-        <p className="text-center text-sm text-muted-foreground">
-          There's nowhere to send you back to, so you can close this tab.
-        </p>
-      </AuthCard>
+      <AuthCard
+        title="Sign in again"
+        subtitle="This verification step has expired or was opened in a new tab. Sign in again to get a fresh one."
+        footer={back}
+      />
     );
   }
 
-  if (!challengeId) {
-    return (
-      <AuthCard title="Start again" footer={signInLink}>
-        <p className="text-center text-sm text-muted-foreground">
-          This verification step expired. Sign in again to get a new code.
-        </p>
-      </AuthCard>
-    );
-  }
+  const toggle = () => {
+    setUseRecovery((v) => !v);
+    setBanner(null);
+    reset({ code: "" });
+  };
 
   return (
     <AuthCard
       title="Confirm it's you"
-      subtitle="Enter the 6-digit code from your authenticator app."
-      footer={signInLink}
+      subtitle={
+        useRecovery
+          ? "Enter one of the recovery codes you saved when you set up two-step verification."
+          : "Enter the 6-digit code from your authenticator app."
+      }
+      footer={back}
     >
       <ErrorBanner message={banner} />
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-        <FormField
-          label="Verification code"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          maxLength={6}
-          placeholder="123456"
-          className="text-center text-lg tracking-[0.4em]"
-          error={errors.code?.message}
-          {...register("code")}
-        />
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-4">
+        {useRecovery ? (
+          <FormField
+            key="recovery"
+            label="Recovery code"
+            autoComplete="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            autoFocus
+            className="font-mono"
+            error={errors.code?.message}
+            {...register("code")}
+          />
+        ) : (
+          <FormField
+            key="totp"
+            label="Verification code"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            autoFocus
+            maxLength={6}
+            placeholder="000000"
+            className="text-center font-mono text-lg tracking-[0.5em]"
+            error={errors.code?.message}
+            {...register("code")}
+          />
+        )}
         <SubmitButton pending={isSubmitting}>Verify</SubmitButton>
       </form>
+      <button
+        type="button"
+        onClick={toggle}
+        className="mt-4 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:underline focus-visible:outline-none"
+      >
+        {useRecovery
+          ? "Use your authenticator app instead"
+          : "Can't use your app? Use a recovery code"}
+      </button>
     </AuthCard>
   );
 }

@@ -1,40 +1,59 @@
 /**
- * OIDC / hand-off params carried in the URL query.
- * We only ever *preserve* them across pages and hand them to the IAM backend.
- * We never navigate to a URL we built ourselves — see redirectBack().
+ * Hand-off back to the app that sent the user here.
+ *
+ * spring-iam's /api/auth/sso/authorize sends a signed-out user to this portal
+ * with ?continue=<authorize URL>. After sign-in we navigate there, and the IAM
+ * redirects on to the app with a one-time code. `continue` comes from the URL,
+ * so it is untrusted: only same-origin URLs, or origins listed in
+ * VITE_TRUSTED_ORIGINS (comma-separated), are followed. Anything else would
+ * make this page an open redirect.
  */
-export const OIDC_KEYS = [
-  "redirect_uri",
-  "continue",
-  "state",
-  "client_id",
-  "product",
-  "scope",
-  "code_challenge",
-  "code_challenge_method",
-  "nonce",
-  "response_type",
-] as const;
 
-export type OidcParams = Partial<Record<(typeof OIDC_KEYS)[number], string>>;
+/** Query params carried across every page of the flow. */
+export const HANDOFF_KEYS = ["continue", "audience"] as const;
 
-export function pickOidcParams(search: Record<string, unknown>): OidcParams {
-  const out: OidcParams = {};
-  for (const key of OIDC_KEYS) {
+export type Handoff = Partial<Record<(typeof HANDOFF_KEYS)[number], string>>;
+
+export function pickHandoff(search: Record<string, unknown>): Handoff {
+  const out: Handoff = {};
+  for (const key of HANDOFF_KEYS) {
     const value = search[key];
     if (typeof value === "string" && value.length > 0) out[key] = value;
   }
   return out;
 }
 
+const trustedOrigins = (import.meta.env.VITE_TRUSTED_ORIGINS ?? "")
+  .split(",")
+  .map((s: string) => s.trim())
+  .filter(Boolean);
+
+/** Returns the URL to follow, or null when it is missing or not trusted. */
+export function safeContinueUrl(
+  raw: string | undefined,
+  currentOrigin: string,
+  trusted: readonly string[] = trustedOrigins,
+): string | null {
+  if (!raw) return null;
+  let url: URL;
+  try {
+    url = new URL(raw, currentOrigin);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+  if (url.origin !== currentOrigin && !trusted.includes(url.origin)) return null;
+  return url.href;
+}
+
 /**
- * Navigate to the destination the backend handed back.
- * Returns false when there is nothing to redirect to, so the page can render
- * a plain "you're signed in" state instead.
+ * Follow `continue` if it is safe. Returns false when there is nowhere to go,
+ * so the page can show a plain "you're signed in" state instead.
  */
-export function redirectBack(redirectTo?: string): boolean {
-  if (!redirectTo || typeof redirectTo !== "string") return false;
+export function continueToApp(handoff: Handoff): boolean {
   if (typeof window === "undefined") return false;
-  window.location.assign(redirectTo);
+  const next = safeContinueUrl(handoff.continue, window.location.origin);
+  if (!next) return false;
+  window.location.assign(next);
   return true;
 }

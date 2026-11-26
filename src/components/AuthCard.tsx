@@ -4,6 +4,10 @@ import { APP_NAME } from "@/lib/brand";
 
 import { ThemeToggle } from "./ThemeToggle";
 
+/**
+ * Page frame for every step: app name and theme toggle on top, the badge in
+ * the middle, secondary links under it.
+ */
 export function AuthCard({
   title,
   subtitle,
@@ -12,39 +16,44 @@ export function AuthCard({
 }: {
   title: string;
   subtitle?: ReactNode;
-  children: ReactNode;
+  children?: ReactNode;
   footer?: ReactNode;
 }) {
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
+    <div className="flex min-h-dvh flex-col">
       <header className="flex items-center justify-between px-4 py-3 sm:px-6">
-        <span className="text-sm font-medium tracking-tight text-foreground">{APP_NAME}</span>
+        <span className="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight text-foreground">
+          <span
+            aria-hidden="true"
+            className="grid size-7 place-items-center rounded-md bg-primary text-[13px] font-bold text-primary-foreground"
+          >
+            {APP_NAME.charAt(0).toUpperCase()}
+          </span>
+          {APP_NAME}
+        </span>
         <ThemeToggle />
       </header>
 
-      <main className="flex flex-1 items-start justify-center px-4 pb-16 sm:items-center sm:px-6">
+      {/* Top-anchored, not centred: errors and late content grow the badge downward instead of shifting it. */}
+      <main className="flex flex-1 justify-center px-4 pt-6 pb-16 sm:px-6 sm:pt-[min(12vh,120px)]">
         <div className="w-full max-w-[400px]">
-          <div className="rounded-lg border border-border bg-card p-6 shadow-sm sm:p-8">
-            <div className="mb-6 flex flex-col items-center text-center">
-              <span
-                aria-hidden="true"
-                className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-md bg-primary text-[11px] font-semibold tracking-wide text-primary-foreground"
-              >
-                {APP_NAME.charAt(0)}
-              </span>
-              <h1 className="text-xl font-semibold tracking-tight text-card-foreground">{title}</h1>
-              {subtitle ? <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p> : null}
+          <div className="badge-shadow">
+            <div className="badge rounded-xl bg-card px-6 pt-14 pb-7 sm:px-8 sm:pb-8">
+              <h1 className="text-[26px] leading-[1.15] font-semibold tracking-[-0.02em] text-balance text-card-foreground">
+                {title}
+              </h1>
+              {subtitle ? (
+                <p className="mt-2 text-[15px] leading-relaxed text-pretty text-muted-foreground">
+                  {subtitle}
+                </p>
+              ) : null}
+              {children ? <div className="mt-6">{children}</div> : null}
             </div>
-            {children}
           </div>
 
           {footer ? (
-            <div className="mt-5 text-center text-sm text-muted-foreground">{footer}</div>
+            <div className="mt-6 text-center text-sm text-muted-foreground">{footer}</div>
           ) : null}
-
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            One account for every connected app
-          </p>
         </div>
       </main>
     </div>

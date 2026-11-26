@@ -1,124 +1,124 @@
-export class ApiError extends Error {
-  status: number;
-  code?: string;
+/**
+ * Client for the spring-iam auth API (https://github.com/mesubash/spring-iam).
+ *
+ * Every call is same-origin under /api: in development Vite proxies it to the
+ * IAM (see vite.config.ts); in production put both behind one reverse proxy so
+ * the IAM's refresh cookie is first-party.
+ */
 
-  constructor(status: number, message: string, code?: string) {
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
     super(message);
     this.name = "ApiError";
-    this.status = status;
-    this.code = code;
   }
 }
 
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+/** spring-iam wraps every response as { success, message, data }. */
+interface Envelope<T> {
+  success?: boolean;
+  message?: string;
+  data?: T;
+}
+
+const GENERIC_4XX = "That didn't work. Check your details and try again.";
+const GENERIC_5XX = "Something went wrong on our end. Try again in a moment.";
+const OFFLINE = "We couldn't reach the server. Check your connection and try again.";
+
+async function request<T>(
+  method: "GET" | "POST",
+  path: string,
+  options: { query?: Record<string, string>; body?: unknown } = {},
+): Promise<T> {
+  const url = options.query ? `${path}?${new URLSearchParams(options.query)}` : path;
   let res: Response;
   try {
-    res = await fetch(path, {
+    res = await fetch(url, {
+      method,
       credentials: "include",
       headers: {
-        "Content-Type": "application/json",
         Accept: "application/json",
-        ...(init?.headers ?? {}),
+        ...(options.body === undefined ? {} : { "Content-Type": "application/json" }),
       },
-      ...init,
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
     });
   } catch {
-    throw new ApiError(0, "We couldn't reach the server. Check your connection and try again.");
+    throw new ApiError(0, OFFLINE);
   }
 
-  const text = await res.text();
-  let body: unknown = undefined;
-  if (text) {
-    try {
-      body = JSON.parse(text);
-    } catch {
-      body = undefined;
-    }
-  }
-  const data = (body ?? {}) as Record<string, unknown>;
-
-  if (!res.ok) {
-    const message =
-      typeof data.message === "string"
-        ? data.message
-        : typeof data.error === "string"
-          ? data.error
-          : res.status >= 500
-            ? "Something went wrong on our end. Please try again in a moment."
-            : "That didn't work. Please check your details and try again.";
-    throw new ApiError(res.status, message, typeof data.code === "string" ? data.code : undefined);
+  let envelope: Envelope<T> = {};
+  try {
+    envelope = (await res.json()) as Envelope<T>;
+  } catch {
+    // Empty or non-JSON body (e.g. a proxy error page): fall through to generic copy.
   }
 
-  return data as T;
+  if (!res.ok || envelope.success === false) {
+    const fallback = res.status >= 500 ? GENERIC_5XX : GENERIC_4XX;
+    throw new ApiError(res.status, envelope.message || fallback);
+  }
+  return envelope.data as T;
 }
 
-/** Shared shape: the IAM tells us where to send the browser next. */
-export interface RedirectResult {
-  redirectTo?: string;
-  message?: string;
+/** What a login, OAuth exchange or MFA check can lead to. */
+export type LoginOutcome =
+  | { status: "OK" }
+  | { status: "MFA_REQUIRED"; challenge: string }
+  | { status: "MFA_ENROLLMENT_REQUIRED"; enrollmentToken: string };
+
+type RawLogin =
+  | { status: "MFA_REQUIRED"; challenge: string }
+  | { status: "MFA_ENROLLMENT_REQUIRED"; enrollmentToken: string }
+  | { status?: undefined; accessToken: string };
+
+/** A successful login carries tokens and no status; the refresh cookie is already set. */
+export function toOutcome(raw: RawLogin | undefined): LoginOutcome {
+  if (raw?.status === "MFA_REQUIRED") return { status: raw.status, challenge: raw.challenge };
+  if (raw?.status === "MFA_ENROLLMENT_REQUIRED") {
+    return { status: raw.status, enrollmentToken: raw.enrollmentToken };
+  }
+  return { status: "OK" };
 }
 
-export interface LoginResult extends RedirectResult {
-  mfaRequired?: boolean;
-  challengeId?: string;
-}
-
-export interface MfaSetupResult {
-  qrCodeUrl?: string;
-  secret?: string;
-  otpauthUrl?: string;
+export interface MfaSetup {
+  otpauthUri: string;
+  secret: string;
 }
 
 export const api = {
-  login: (input: { email: string; password: string; product?: string | null }) =>
-    apiFetch<LoginResult>("/api/auth/login", { method: "POST", body: JSON.stringify(input) }),
+  login: async (input: { email: string; password: string; audience?: string }) =>
+    toOutcome(await request<RawLogin>("POST", "/api/auth/login", { body: input })),
 
   register: (input: { name: string; email: string; password: string }) =>
-    apiFetch<RedirectResult>("/api/auth/register", {
-      method: "POST",
-      body: JSON.stringify(input),
-    }),
+    request<unknown>("POST", "/api/auth/register", { body: input }),
 
-  forgotPassword: (input: { email: string }) =>
-    apiFetch<RedirectResult>("/api/auth/forgot-password", {
-      method: "POST",
-      body: JSON.stringify(input),
-    }),
+  forgotPassword: (email: string) =>
+    request<unknown>("POST", "/api/auth/forgot-password", { query: { email } }),
 
-  resetPassword: (input: { token: string; password: string }) =>
-    apiFetch<RedirectResult>("/api/auth/reset-password", {
-      method: "POST",
-      body: JSON.stringify(input),
-    }),
+  resetPassword: (input: { token: string; newPassword: string }) =>
+    request<unknown>("POST", "/api/auth/reset-password", { body: input }),
 
-  verifyEmail: (input: { token: string }) =>
-    apiFetch<RedirectResult>("/api/auth/verify-email", {
-      method: "POST",
-      body: JSON.stringify(input),
-    }),
+  verifyEmail: (token: string) =>
+    request<unknown>("POST", "/api/auth/verify-email", { query: { token } }),
 
-  resendVerification: (input: { email: string }) =>
-    apiFetch<RedirectResult>("/api/auth/verify-email/resend", {
-      method: "POST",
-      body: JSON.stringify(input),
-    }),
+  mfaVerify: async (input: { challenge: string; code: string }) =>
+    toOutcome(await request<RawLogin>("POST", "/api/auth/mfa/verify", { body: input })),
 
-  mfaVerify: (input: { challengeId: string; code: string }) =>
-    apiFetch<LoginResult>("/api/auth/v1/mfa/verify", {
-      method: "POST",
-      body: JSON.stringify(input),
-    }),
+  mfaSetup: (enrollmentToken: string) =>
+    request<MfaSetup>("POST", "/api/auth/mfa/setup", { body: { enrollmentToken } }),
 
-  mfaSetup: () => apiFetch<MfaSetupResult>("/api/auth/v1/mfa/setup"),
+  mfaEnable: (input: { enrollmentToken: string; code: string }) =>
+    request<{ recoveryCodes: string[] }>("POST", "/api/auth/mfa/enable", { body: input }),
 
-  mfaEnable: (input: { code: string }) =>
-    apiFetch<RedirectResult>("/api/auth/v1/mfa/enable", {
-      method: "POST",
-      body: JSON.stringify(input),
-    }),
+  oauthProviders: async () =>
+    (await request<{ providers?: string[] }>("GET", "/api/auth/oauth/providers")).providers ?? [],
+
+  oauthExchange: async (code: string) =>
+    toOutcome(await request<RawLogin>("POST", "/api/auth/oauth/exchange", { body: { code } })),
 };
 
 export function errorMessage(err: unknown): string {
-  if (err instanceof ApiError) return err.message;
-  return "Something unexpected happened. Please try again.";
+  return err instanceof ApiError ? err.message : "Something unexpected happened. Try again.";
 }

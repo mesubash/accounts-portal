@@ -1,42 +1,43 @@
 import { Eye, EyeOff } from "lucide-react";
-import { forwardRef, useId, useState, type InputHTMLAttributes } from "react";
+import { forwardRef, useId, useState, type InputHTMLAttributes, type ReactNode } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 interface FormFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
   error?: string;
-  hint?: string;
+  /** Sits at the right end of the label row, e.g. "Forgot password?". */
+  labelAside?: ReactNode;
+  /** Sits under the input, e.g. a strength meter. */
+  below?: ReactNode;
 }
 
 export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(function FormField(
-  { label, error, hint, type = "text", id, className, ...props },
+  { label, error, labelAside, below, type = "text", id, className, ...props },
   ref,
 ) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const errorId = `${inputId}-error`;
-  const hintId = `${inputId}-hint`;
   const [revealed, setRevealed] = useState(false);
   const isPassword = type === "password";
 
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={inputId} className="text-sm font-medium">
-        {label}
-      </Label>
+    <div className="grid gap-1.5">
+      <div className="flex items-baseline justify-between gap-3">
+        <Label htmlFor={inputId}>{label}</Label>
+        {labelAside ? <span className="text-sm">{labelAside}</span> : null}
+      </div>
       <div className="relative">
         <Input
           id={inputId}
           ref={ref}
           type={isPassword && revealed ? "text" : type}
           aria-invalid={error ? true : undefined}
-          aria-describedby={
-            [error ? errorId : null, hint ? hintId : null].filter(Boolean).join(" ").trim() ||
-            undefined
-          }
-          className={`h-11 ${isPassword ? "pr-11" : ""} ${error ? "border-destructive" : ""} ${className ?? ""}`}
+          aria-describedby={error ? errorId : undefined}
+          className={cn("h-11", isPassword && "pr-11", className)}
           {...props}
         />
         {isPassword ? (
@@ -44,19 +45,16 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(function F
             type="button"
             onClick={() => setRevealed((v) => !v)}
             aria-label={revealed ? "Hide password" : "Show password"}
-            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            aria-pressed={revealed}
+            className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-lg text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
-            {revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {revealed ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         ) : null}
       </div>
-      {hint ? (
-        <p id={hintId} className="text-xs text-muted-foreground">
-          {hint}
-        </p>
-      ) : null}
+      {below}
       {error ? (
-        <p id={errorId} className="text-xs text-destructive">
+        <p id={errorId} className="text-[13px] text-destructive">
           {error}
         </p>
       ) : null}

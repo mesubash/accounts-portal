@@ -1,149 +1,75 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { pageTitle } from "@/lib/brand";
+import { createFileRoute } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import { AuthCard } from "@/components/AuthCard";
-import { ErrorBanner } from "@/components/ErrorBanner";
-import { FormField } from "@/components/FormField";
-import { SubmitButton } from "@/components/SubmitButton";
+import { TextLink } from "@/components/TextLink";
 import { api, errorMessage } from "@/lib/api";
-import { redirectBack } from "@/lib/oidc";
-import { useAuthSearch } from "@/lib/useAuthSearch";
-import { useCooldown } from "@/lib/useCooldown";
-import { emailSchema } from "@/lib/validation";
-import { z } from "zod";
+import { pageTitle } from "@/lib/brand";
+import { useQueryParam } from "@/lib/useAuthSearch";
 
 export const Route = createFileRoute("/verify-email")({
   head: () => ({
-    meta: [
-      { title: pageTitle("Verify your email") },
-      {
-        name: "description",
-        content: "Confirm your email address to activate your account.",
-      },
-      { property: "og:title", content: pageTitle("Verify your email") },
-      { property: "og:description", content: "Confirm your email to activate your account." },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: pageTitle("Verify your email") }, { name: "robots", content: "noindex" }],
   }),
   component: VerifyEmail,
 });
 
-const resendSchema = z.object({ email: emailSchema });
-type ResendValues = z.infer<typeof resendSchema>;
-
-type State = "checking" | "success" | "failed" | "no-token";
+type State = { kind: "checking" } | { kind: "done" } | { kind: "failed"; message: string };
 
 function VerifyEmail() {
-  const { searchStr } = useAuthSearch();
-  const token = new URLSearchParams(searchStr).get("token");
-  const [state, setState] = useState<State>(token ? "checking" : "no-token");
-  const [banner, setBanner] = useState<string | null>(null);
-  const [resent, setResent] = useState(false);
-  const { seconds, start } = useCooldown();
+  const token = useQueryParam("token");
+  const [state, setState] = useState<State>({ kind: "checking" });
+  const sent = useRef(false);
 
   useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
+    // Tokens are single-use: StrictMode's double effect must not spend it twice.
+    if (!token || sent.current) return;
+    sent.current = true;
     api
-      .verifyEmail({ token })
-      .then((result) => {
-        if (cancelled) return;
-        if (!redirectBack(result.redirectTo)) setState("success");
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setBanner(errorMessage(err));
-        setState("failed");
-      });
-    return () => {
-      cancelled = true;
-    };
+      .verifyEmail(token)
+      .then(() => setState({ kind: "done" }))
+      .catch((err) => setState({ kind: "failed", message: errorMessage(err) }));
   }, [token]);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<ResendValues>({
-    resolver: zodResolver(resendSchema),
-    defaultValues: { email: "" },
-  });
+  const signIn = <TextLink to="/signin">Go to sign in</TextLink>;
 
-  const resend = async (values: ResendValues) => {
-    setBanner(null);
-    try {
-      await api.resendVerification(values);
-      setResent(true);
-      start(30);
-    } catch (err) {
-      setBanner(errorMessage(err));
-    }
-  };
+  if (!token) {
+    return (
+      <AuthCard
+        title="This link isn't complete"
+        subtitle="The verification link is missing its token. Open it straight from the email we sent you."
+        footer={signIn}
+      />
+    );
+  }
 
-  const signInLink = (
-    <Link
-      to="/signin"
-      search={(prev: Record<string, unknown>) => prev}
-      className="font-medium text-primary underline-offset-4 hover:underline"
-    >
-      Go to sign in
-    </Link>
-  );
-
-  if (state === "checking") {
+  if (state.kind === "checking") {
     return (
       <AuthCard title="Verifying your email">
-        <p aria-live="polite" className="text-center text-sm text-muted-foreground">
+        <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
           One moment while we confirm your link.
         </p>
       </AuthCard>
     );
   }
 
-  if (state === "success") {
+  if (state.kind === "done") {
     return (
-      <AuthCard title="Email verified" footer={signInLink}>
-        <p className="text-center text-sm text-muted-foreground">
-          Your account is ready. You can sign in now.
-        </p>
-      </AuthCard>
+      <AuthCard
+        title="Email verified"
+        subtitle="Your account is ready. Sign in to get started."
+        footer={signIn}
+      />
     );
   }
 
   return (
     <AuthCard
-      title={state === "no-token" ? "Verify your email" : "That link didn't work"}
-      subtitle={
-        state === "no-token"
-          ? "Enter your email and we'll send a fresh verification link."
-          : "The link may have expired or already been used. We can send a new one."
-      }
-      footer={signInLink}
-    >
-      <ErrorBanner message={banner} />
-
-      {resent ? (
-        <p aria-live="polite" className="mb-4 text-center text-sm text-muted-foreground">
-          Sent. Check your inbox for the new link.
-        </p>
-      ) : null}
-
-      <form onSubmit={handleSubmit(resend)} noValidate className="space-y-4">
-        <FormField
-          label="Email"
-          type="email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          error={errors.email?.message}
-          {...register("email")}
-        />
-        <SubmitButton pending={isSubmitting} disabled={seconds > 0}>
-          {seconds > 0 ? `Resend in ${seconds}s` : "Send verification link"}
-        </SubmitButton>
-      </form>
-    </AuthCard>
+      title="That link didn't work"
+      subtitle={`${state.message} Links work once and expire, so the newest email is the one to use.`}
+      footer={signIn}
+    />
   );
 }
