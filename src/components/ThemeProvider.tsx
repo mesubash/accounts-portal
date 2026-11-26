@@ -7,7 +7,7 @@ const ThemeContext = createContext<{ theme: Theme; setTheme: (t: Theme) => void 
   setTheme: () => {},
 });
 
-const STORAGE_KEY = "accounts-theme";
+export const THEME_STORAGE_KEY = "accounts-theme";
 
 function applyTheme(theme: Theme) {
   if (typeof document === "undefined") return;
@@ -22,14 +22,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("system");
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY) as Theme | null;
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
     const initial = stored ?? "system";
     setThemeState(initial);
     applyTheme(initial);
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => {
-      if ((window.localStorage.getItem(STORAGE_KEY) ?? "system") === "system") {
+      if ((window.localStorage.getItem(THEME_STORAGE_KEY) ?? "system") === "system") {
         applyTheme("system");
       }
     };
@@ -39,7 +39,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setTheme = (next: Theme) => {
     setThemeState(next);
-    window.localStorage.setItem(STORAGE_KEY, next);
+    window.localStorage.setItem(THEME_STORAGE_KEY, next);
     applyTheme(next);
   };
 

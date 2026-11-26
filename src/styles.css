@@ -1,161 +1,126 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "@fontsource-variable/instrument-sans";
 
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * Tokens. To rebrand, change --brand (and --brand-foreground if contrast
+ * needs it) in both :root and .dark. Everything else follows.
  */
 
 @theme inline {
   --font-sans:
-    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-    sans-serif;
+    "Instrument Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 18px;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
+  --color-card-foreground: var(--foreground);
+  --color-primary: var(--brand);
+  --color-primary-foreground: var(--brand-foreground);
+  --color-secondary: var(--muted);
+  --color-secondary-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--muted);
+  --color-accent-foreground: var(--foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
   --color-border: var(--border);
   --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  --color-ring: var(--brand);
+  --color-ring-offset-background: var(--card);
 }
 
 :root {
-  /* The single brand accent. Swap this one value for the exact brand hex. */
-  --brand: oklch(0.52 0.13 232);
-  --brand-foreground: oklch(0.99 0 0);
+  --brand: #2c4fb8; /* lapis */
+  --brand-foreground: #ffffff;
 
-  --radius: 0.5rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.21 0.01 250);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.01 250);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.01 250);
-  --primary: var(--brand);
-  --primary-foreground: var(--brand-foreground);
-  --secondary: oklch(0.97 0.002 250);
-  --secondary-foreground: oklch(0.28 0.01 250);
-  --muted: oklch(0.97 0.002 250);
-  --muted-foreground: oklch(0.5 0.01 250);
-  --accent: oklch(0.96 0.004 240);
-  --accent-foreground: oklch(0.28 0.01 250);
-  --destructive: oklch(0.52 0.19 27);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.91 0.004 250);
-  --input: oklch(0.89 0.004 250);
-  --ring: var(--brand);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: var(--brand);
-  --sidebar-primary-foreground: var(--brand-foreground);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: var(--brand);
+  --background: #eef1f4; /* mist */
+  --card: #ffffff;
+  --foreground: #15212c; /* ink */
+  --muted: #f2f4f7;
+  --muted-foreground: #5a6775;
+  --border: #dde2e8;
+  --input: #c9d0d8;
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+  --success: #1d7a4f;
+  --badge-shadow: rgb(21 33 44 / 0.14);
 }
 
 .dark {
-  --brand: oklch(0.66 0.11 232);
-  --brand-foreground: oklch(0.16 0.01 250);
+  --brand: #8ea6f0;
+  --brand-foreground: #0e1622;
 
-  --background: oklch(0.16 0.005 250);
-  --foreground: oklch(0.95 0.002 250);
-  --card: oklch(0.19 0.005 250);
-  --card-foreground: oklch(0.95 0.002 250);
-  --popover: oklch(0.19 0.005 250);
-  --popover-foreground: oklch(0.95 0.002 250);
-  --primary: var(--brand);
-  --primary-foreground: var(--brand-foreground);
-  --secondary: oklch(0.25 0.005 250);
-  --secondary-foreground: oklch(0.95 0.002 250);
-  --muted: oklch(0.25 0.005 250);
-  --muted-foreground: oklch(0.72 0.008 250);
-  --accent: oklch(0.26 0.006 250);
-  --accent-foreground: oklch(0.95 0.002 250);
-  --destructive: oklch(0.65 0.17 25);
-  --destructive-foreground: oklch(0.16 0.01 250);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 18%);
-  --ring: var(--brand);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.19 0.005 250);
-  --sidebar-foreground: oklch(0.95 0.002 250);
-  --sidebar-primary: var(--brand);
-  --sidebar-primary-foreground: var(--brand-foreground);
-  --sidebar-accent: oklch(0.26 0.006 250);
-  --sidebar-accent-foreground: oklch(0.95 0.002 250);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: var(--brand);
+  --background: #0e141a;
+  --card: #18212b;
+  --foreground: #e7ecf1;
+  --muted: #212c37;
+  --muted-foreground: #9aa7b4;
+  --border: #2a3643;
+  --input: #3a4856;
+  --destructive: #f08a7e;
+  --destructive-foreground: #0e141a;
+  --success: #6fcf9f;
+  --badge-shadow: rgb(0 0 0 / 0.5);
 }
 
 @layer base {
-  html {
-    font-family: var(--font-sans);
-  }
-
   * {
     border-color: var(--color-border);
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--brand) 25%, transparent);
+  }
+}
+
+/*
+ * The access badge: the card has a lanyard slot punched through it near the
+ * top. The slot is a real cut-out (mask), so the page background shows
+ * through; the drop-shadow on the wrapper follows the cut.
+ */
+@layer components {
+  .badge-shadow {
+    filter: drop-shadow(0 0 0.5px var(--badge-shadow)) drop-shadow(0 18px 28px var(--badge-shadow));
+  }
+
+  .dark .badge-shadow {
+    filter: drop-shadow(0 0 0 var(--border)) drop-shadow(0 0 1px var(--border))
+      drop-shadow(0 18px 28px var(--badge-shadow));
+  }
+
+  .badge {
+    --slot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='10'%3E%3Crect width='52' height='10' rx='5'/%3E%3C/svg%3E");
+    -webkit-mask:
+      var(--slot) center 18px / 52px 10px no-repeat,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      var(--slot) center 18px / 52px 10px no-repeat exclude,
+      linear-gradient(#000 0 0);
   }
 }
