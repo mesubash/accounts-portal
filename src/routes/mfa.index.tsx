@@ -54,6 +54,7 @@ function Mfa() {
   if (!challenge) {
     return (
       <AuthCard
+        tone="danger"
         title="Sign in again"
         subtitle="This verification step has expired or was opened in a new tab. Sign in again to get a fresh one."
         footer={back}
@@ -110,7 +111,7 @@ function Mfa() {
       <button
         type="button"
         onClick={toggle}
-        className="mt-4 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:underline focus-visible:outline-none"
+        className="mt-4 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-sm"
       >
         {useRecovery
           ? "Use your authenticator app instead"

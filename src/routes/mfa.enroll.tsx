@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, useRouterState } from "@tanstack/react-router";
-import { Check, Copy, Download } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Check, ChevronDown, Copy, Download } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { renderSVG } from "uqr";
 
@@ -80,50 +80,76 @@ function MfaEnroll() {
   return (
     <AuthCard
       title="Set up two-step verification"
-      subtitle="Your account needs a second step at sign-in. Scan the code with an authenticator app, then enter the 6-digit code it shows."
+      subtitle="This account needs a code from your phone at sign-in. Setting it up takes a minute."
       footer={back}
     >
       <ErrorBanner message={banner} />
-      <div className="mb-6 grid justify-items-center gap-3">
-        {setup ? (
-          <QrCode value={setup.otpauthUri} />
-        ) : (
-          <div
-            className="size-44 animate-pulse rounded-lg border border-border bg-muted"
-            aria-hidden="true"
-          />
-        )}
-        {setup ? (
-          <details className="w-full text-center text-sm">
-            <summary className="cursor-pointer text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-              Can't scan it? Enter a setup key
-            </summary>
-            <div className="mt-2 flex items-center justify-center gap-1">
-              <code className="rounded-md bg-muted px-2 py-1 font-mono text-sm break-all text-foreground">
-                {setup.secret.replace(/(.{4})/g, "$1 ").trim()}
-              </code>
-              <CopyButton text={setup.secret} label="Copy setup key" />
-            </div>
-          </details>
-        ) : null}
-      </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-4">
-        <FormField
-          label="6-digit code"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          maxLength={6}
-          placeholder="000000"
-          className="text-center font-mono text-lg tracking-[0.5em]"
-          error={errors.code?.message}
-          {...register("code")}
-        />
-        <SubmitButton pending={isSubmitting} disabled={!setup}>
-          Turn on two-step verification
-        </SubmitButton>
-      </form>
+      <ol className="grid gap-6">
+        <li className="grid gap-3">
+          <Step n={1}>Scan this code with an authenticator app</Step>
+          <div className="grid justify-items-center gap-3">
+            {setup ? (
+              <QrCode value={setup.otpauthUri} />
+            ) : (
+              <div
+                className="size-44 animate-pulse rounded-lg border border-border bg-muted"
+                aria-hidden="true"
+              />
+            )}
+            {setup ? (
+              <details className="group w-full text-center text-sm">
+                <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
+                  Can't scan it? Type a setup key instead
+                  <ChevronDown
+                    className="size-4 transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                    aria-hidden="true"
+                  />
+                </summary>
+                <div className="mt-2 flex items-center justify-center gap-1">
+                  <code className="rounded-md bg-muted px-2 py-1 font-mono text-sm break-all text-foreground">
+                    {setup.secret.replace(/(.{4})/g, "$1 ").trim()}
+                  </code>
+                  <CopyButton text={setup.secret} label="Copy setup key" />
+                </div>
+              </details>
+            ) : null}
+          </div>
+        </li>
+        <li className="grid gap-3">
+          <Step n={2}>Enter the 6-digit code the app shows</Step>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-4">
+            <FormField
+              label="6-digit code"
+              hideLabel
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              placeholder="000000"
+              className="text-center font-mono text-lg tracking-[0.5em]"
+              error={errors.code?.message}
+              {...register("code")}
+            />
+            <SubmitButton pending={isSubmitting} disabled={!setup}>
+              Turn on two-step verification
+            </SubmitButton>
+          </form>
+        </li>
+      </ol>
     </AuthCard>
+  );
+}
+
+function Step({ n, children }: { n: number; children: ReactNode }) {
+  return (
+    <p className="flex items-center gap-2.5 text-[15px] font-medium text-foreground">
+      <span
+        aria-hidden="true"
+        className="grid size-6 shrink-0 place-items-center rounded-full bg-band text-[13px] font-semibold text-primary"
+      >
+        {n}
+      </span>
+      {children}
+    </p>
   );
 }
 
@@ -174,6 +200,7 @@ function RecoveryCodes({ codes }: { codes: string[] }) {
 
   return (
     <AuthCard
+      tone="success"
       title="Save your recovery codes"
       subtitle="If you lose your phone, each code gets you in once. This is the only time they're shown."
     >

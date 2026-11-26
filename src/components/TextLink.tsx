@@ -12,7 +12,7 @@ export function TextLink({ to, children }: { to: AuthPath; children: ReactNode }
     <Link
       to={to}
       search={handoff as never}
-      className="font-medium text-primary underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none"
+      className="rounded-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >
       {children}
     </Link>

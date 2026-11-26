@@ -50,6 +50,7 @@ function ResetPassword() {
   if (!token) {
     return (
       <AuthCard
+        tone="danger"
         title="This link isn't complete"
         subtitle="The reset link is missing its token. Open it straight from the email, or ask for a new one."
         footer={<TextLink to="/forgot-password">Request a new link</TextLink>}
@@ -60,6 +61,7 @@ function ResetPassword() {
   if (done) {
     return (
       <AuthCard
+        tone="success"
         title="Password updated"
         subtitle="You're all set. Sign in with your new password."
         footer={<TextLink to="/signin">Go to sign in</TextLink>}

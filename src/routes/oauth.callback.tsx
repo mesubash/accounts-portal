@@ -44,6 +44,7 @@ function OAuthCallback() {
   if (failure || providerError || !code) {
     return (
       <AuthCard
+        tone="danger"
         title="Couldn't sign you in"
         subtitle={
           failure ??

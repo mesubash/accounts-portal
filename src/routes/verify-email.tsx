@@ -37,6 +37,7 @@ function VerifyEmail() {
   if (!token) {
     return (
       <AuthCard
+        tone="danger"
         title="This link isn't complete"
         subtitle="The verification link is missing its token. Open it straight from the email we sent you."
         footer={signIn}
@@ -58,6 +59,7 @@ function VerifyEmail() {
   if (state.kind === "done") {
     return (
       <AuthCard
+        tone="success"
         title="Email verified"
         subtitle="Your account is ready. Sign in to get started."
         footer={signIn}
@@ -67,6 +69,7 @@ function VerifyEmail() {
 
   return (
     <AuthCard
+      tone="danger"
       title="That link didn't work"
       subtitle={`${state.message} Links work once and expire, so the newest email is the one to use.`}
       footer={signIn}

@@ -23,6 +23,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   return (
     <AuthCard
+      tone="danger"
       title="This page didn't load"
       subtitle="Something broke while loading this step. Try again; if it keeps happening, start over from sign-in."
       footer={<TextLink to="/signin">Start over</TextLink>}

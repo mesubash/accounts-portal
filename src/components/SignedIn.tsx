@@ -4,6 +4,7 @@ import { AuthCard } from "./AuthCard";
 export function SignedIn() {
   return (
     <AuthCard
+      tone="success"
       title="You're signed in"
       subtitle="Your session is active. You can close this tab or go back to the app you came from."
     />

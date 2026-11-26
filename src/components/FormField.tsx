@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 
 interface FormFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
+  /** Keep the label for screen readers only, when visible text nearby already names the field. */
+  hideLabel?: boolean;
   error?: string;
   /** Sits at the right end of the label row, e.g. "Forgot password?". */
   labelAside?: ReactNode;
@@ -15,7 +17,7 @@ interface FormFieldProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(function FormField(
-  { label, error, labelAside, below, type = "text", id, className, ...props },
+  { label, hideLabel, error, labelAside, below, type = "text", id, className, ...props },
   ref,
 ) {
   const generatedId = useId();
@@ -27,7 +29,9 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(function F
   return (
     <div className="grid gap-1.5">
       <div className="flex items-baseline justify-between gap-3">
-        <Label htmlFor={inputId}>{label}</Label>
+        <Label htmlFor={inputId} className={cn(hideLabel && "sr-only")}>
+          {label}
+        </Label>
         {labelAside ? <span className="text-sm">{labelAside}</span> : null}
       </div>
       <div className="relative">

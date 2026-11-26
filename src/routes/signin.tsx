@@ -55,7 +55,6 @@ function SignIn() {
   return (
     <AuthCard
       title="Sign in"
-      subtitle="Welcome back. Use your email and password to continue."
       footer={
         <>
           New here? <TextLink to="/signup">Create an account</TextLink>
