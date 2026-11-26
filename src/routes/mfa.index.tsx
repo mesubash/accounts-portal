@@ -19,8 +19,7 @@ export const Route = createFileRoute("/mfa/")({
       { title: pageTitle("Two-step verification") },
       {
         name: "description",
-        content:
-          "Enter the 6-digit code from your authenticator app to finish signing in.",
+        content: "Enter the 6-digit code from your authenticator app to finish signing in.",
       },
       { property: "og:title", content: pageTitle("Two-step verification") },
       { property: "og:description", content: "Confirm it's you with a 6-digit code." },

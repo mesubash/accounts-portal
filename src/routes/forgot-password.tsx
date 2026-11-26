@@ -18,8 +18,7 @@ export const Route = createFileRoute("/forgot-password")({
       { title: pageTitle("Reset your password") },
       {
         name: "description",
-        content:
-          "Forgot your password? Enter your email and we'll send a reset link.",
+        content: "Forgot your password? Enter your email and we'll send a reset link.",
       },
       { property: "og:title", content: pageTitle("Reset your password") },
       {

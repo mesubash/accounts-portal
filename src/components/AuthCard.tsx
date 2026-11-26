@@ -33,9 +33,7 @@ export function AuthCard({
                 {APP_NAME.charAt(0)}
               </span>
               <h1 className="text-xl font-semibold tracking-tight text-card-foreground">{title}</h1>
-              {subtitle ? (
-                <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
-              ) : null}
+              {subtitle ? <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p> : null}
             </div>
             {children}
           </div>

@@ -11,11 +11,7 @@ import { SubmitButton } from "@/components/SubmitButton";
 import { api, errorMessage } from "@/lib/api";
 import { redirectBack } from "@/lib/oidc";
 import { useAuthSearch } from "@/lib/useAuthSearch";
-import {
-  passwordStrength,
-  resetPasswordSchema,
-  type ResetPasswordValues,
-} from "@/lib/validation";
+import { passwordStrength, resetPasswordSchema, type ResetPasswordValues } from "@/lib/validation";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({

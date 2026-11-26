@@ -21,8 +21,7 @@ export const Route = createFileRoute("/signin")({
       { title: pageTitle("Sign in") },
       {
         name: "description",
-        content:
-          "Sign in to your account to continue.",
+        content: "Sign in to your account to continue.",
       },
       { property: "og:title", content: pageTitle("Sign in") },
       {
@@ -73,7 +72,8 @@ function SignIn() {
     return (
       <AuthCard title="You're signed in" subtitle="Your account session is active.">
         <p className="text-center text-sm text-muted-foreground">
-          There's nowhere to send you back to, so you can close this tab or return to the app you came from.
+          There's nowhere to send you back to, so you can close this tab or return to the app you
+          came from.
         </p>
       </AuthCard>
     );

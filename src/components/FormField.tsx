@@ -32,10 +32,10 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(function F
           ref={ref}
           type={isPassword && revealed ? "text" : type}
           aria-invalid={error ? true : undefined}
-          aria-describedby={[error ? errorId : null, hint ? hintId : null]
-            .filter(Boolean)
-            .join(" ")
-            .trim() || undefined}
+          aria-describedby={
+            [error ? errorId : null, hint ? hintId : null].filter(Boolean).join(" ").trim() ||
+            undefined
+          }
           className={`h-11 ${isPassword ? "pr-11" : ""} ${error ? "border-destructive" : ""} ${className ?? ""}`}
           {...props}
         />

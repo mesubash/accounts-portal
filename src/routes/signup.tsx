@@ -20,8 +20,7 @@ export const Route = createFileRoute("/signup")({
       { title: pageTitle("Create your account") },
       {
         name: "description",
-        content:
-          "Create an account: one sign-in for every connected app.",
+        content: "Create an account: one sign-in for every connected app.",
       },
       { property: "og:title", content: pageTitle("Create your account") },
       {

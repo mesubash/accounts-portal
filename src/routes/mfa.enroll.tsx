@@ -18,8 +18,7 @@ export const Route = createFileRoute("/mfa/enroll")({
       { title: pageTitle("Set up two-step verification") },
       {
         name: "description",
-        content:
-          "Add an authenticator app to your account for two-step verification.",
+        content: "Add an authenticator app to your account for two-step verification.",
       },
       { property: "og:title", content: pageTitle("Set up two-step verification") },
       { property: "og:description", content: "Add an authenticator app to your account." },
